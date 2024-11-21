@@ -1,6 +1,7 @@
 const mysql = require('mysql2/promise'); // Sử dụng mysql2/promise để hỗ trợ async/await
 const express = require('express');
 const cors = require('cors');
+
 const app = express();
 
 app.use(cors());
@@ -12,17 +13,20 @@ const config = {
   user: 'root',
   password: 'loc2003', // Thay đổi theo mật khẩu của bạn
   database: 'db_videosharingapp',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 };
 
 // Tạo pool kết nối
 let db;
 (async () => {
   try {
-    db = await mysql.createPool(config); // Sử dụng createPool của mysql2/promise
+    db = await mysql.createPool(config);
     console.log('Kết nối MySQL thành công');
   } catch (err) {
     console.error('Kết nối MySQL thất bại:', err);
-    process.exit(1); // Thoát chương trình nếu không kết nối được
+    process.exit(1); // Dừng ứng dụng nếu không kết nối được
   }
 })();
 
@@ -205,8 +209,7 @@ app.post('/savePost', async (req, res) => {
   }
 
   try {
-    const pool = req.app.locals.db;
-    const [result] = await pool.query(`
+    const [result] = await db.query(`
       INSERT INTO Post (idUser, type, url, content, upload_at)
       VALUES (?, ?, ?, ?, NOW())
     `, [idUser, type, url, content]);
@@ -329,9 +332,7 @@ app.post('/unlike', async (req, res) => {
 
 app.get('/imageStreaming4', async (req, res) => {
   try {
-    const pool = req.app.locals.db;
-    console.log(pool) // Assuming db is a MySQL connection pool
-    const [rows] = await pool.query(`
+    const [rows] = await db.query(`
       SELECT p.*, u.*
       FROM post p
       INNER JOIN users u ON p.idUser = u.idUser
@@ -339,9 +340,136 @@ app.get('/imageStreaming4', async (req, res) => {
       ORDER BY p.idPost DESC
       LIMIT 4;
     `);
+    res.status(200).json(rows); // Trả về dữ liệu JSON
+  } catch (err) {
+    console.error('Lỗi khi lấy chi tiết hình ảnh:', err);
+    res.status(500).send('Lỗi server');
+  }
+});
+
+app.get('/imageStreaming', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT p.*, u.*
+      FROM Post p 
+      INNER JOIN Users u ON p.idUser = u.idUser
+      WHERE p.type = 'image'
+      ORDER BY p.idPost DESC;
+    `);
+    res.status(200).json(rows); // Trả về dữ liệu JSON
+  } catch (err) {
+    console.error('Lỗi khi lấy chi tiết bài viết dạng hình ảnh:', err);
+    res.status(500).send('Lỗi server');
+  }
+});
+
+// API lấy thông tin video
+app.get("/videoStreaming", async (req, res) => {
+  try {
+    const query = `
+      SELECT * FROM Post p
+      INNER JOIN Users u ON p.idUser = u.idUser
+      WHERE p.type = 'video'
+      ORDER BY p.idPost DESC;
+    `;
+    const [rows] = await db.query(query); // Sử dụng pool.query cho MySQL
     res.json(rows);
   } catch (err) {
-    console.log('Error fetching image details:', err);
+    console.error("Error fetching video details:", err);
+    res.status(500).send("Server Error");
+  }
+});
+
+// Endpoint để lưu bài viết mới
+app.post('/insertComment', async (req, res) => {
+  const { idPost, idUser, text } = req.body;
+
+  // Kiểm tra dữ liệu đầu vào
+  if (!idUser || !idPost || !text) {
+    return res.status(400).json({ error: 'Vui lòng cung cấp idUser, idPost và text.' });
+  }
+
+  try {
+    // Thực hiện truy vấn
+    const query = `
+      INSERT INTO Comment (idUser, idPost, text, time)
+      VALUES (?, ?, ?, NOW());
+    `;
+    const [result] = await db.query(query, [idUser, idPost, text]);
+
+    res.status(201).json({ message: 'Bình luận thành công!', insertId: result.insertId });
+  } catch (error) {
+    console.error("Lỗi cơ sở dữ liệu:", error);
+    res.status(500).json({ error: 'Lỗi khi thêm bình luận vào cơ sở dữ liệu.' });
+  }
+});
+
+
+// API Endpoint để lấy danh sách comment của 1 video
+app.get('/comment', async (req, res) => {
+  const { id } = req.query;
+  const parsedId = parseInt(id, 10);
+  if (isNaN(parsedId)) {
+    return res.status(400).send('Invalid id parameter');
+  }
+
+  try {
+    const [rows] = await db.query(`
+      SELECT c.text, c.time, u.avatar, u.username
+      FROM Comment c
+      INNER JOIN Post p ON c.idPost = p.idPost
+      INNER JOIN Users u ON u.idUser = c.idUser
+      WHERE p.idPost = ?
+      ORDER BY p.idPost DESC
+    `, [parsedId]);
+
+    res.json(rows);
+  } catch (err) {
+    console.log('Error fetching comments:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// API Endpoint để lấy số lượng comment của 1 video
+app.get('/commentCount', async (req, res) => {
+  const { id } = req.query;
+  const parsedId = parseInt(id, 10);
+  if (isNaN(parsedId)) {
+    return res.status(400).send('Invalid id parameter');
+  }
+
+  try {
+    const [rows] = await db.query(`
+      SELECT COUNT(*) AS comment_count
+      FROM Comment
+      WHERE idPost = ?
+    `, [parsedId]);
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.log('Error fetching comment count:', err);
+    res.status(500).send('Server Error');
+  }
+});
+
+// API Endpoint để lấy số lượng Like của 1 video
+app.get('/likeCount', async (req, res) => {
+  const { id } = req.query;
+  const parsedId = parseInt(id, 10);
+  if (isNaN(parsedId)) {
+    return res.status(400).send('Invalid id parameter');
+  }
+
+  try {
+    const [rows] = await db.query(`
+      SELECT COUNT(*) AS like_count
+      FROM \`Like\`
+      WHERE idPost = ?
+    `, [parsedId]);
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.log('Error fetching like count:', err);
     res.status(500).send('Server Error');
   }
 });

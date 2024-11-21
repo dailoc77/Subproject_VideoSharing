@@ -1,246 +1,353 @@
-import { TouchableOpacity } from 'react-native';
-import { SafeAreaView, StyleSheet, Text, View, Image, ScrollView, FlatList } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { useState, useEffect } from 'react';
-import { Video } from 'expo-av';
-import axios from 'axios';
+import { TouchableOpacity } from "react-native";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  FlatList,
+} from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { useState, useEffect } from "react";
+import { Video } from "expo-av";
+import axios from "axios";
 
 const dataTopTrending = [
-  { id: '1', image: require('../assets/Home_Video_Listing/Container3.png'), marginLeft: -10 },
-  { id: '2', image: require('../assets/Home_Video_Listing/Container15.png'), marginLeft: 0 },
-  { id: '3', image: require('../assets/Home_Video_Listing/Container16.png'), marginLeft: 0 },
+  {
+    id: "1",
+    image: require("../assets/Home_Video_Listing/Container3.png"),
+    marginLeft: -10,
+  },
+  {
+    id: "2",
+    image: require("../assets/Home_Video_Listing/Container15.png"),
+    marginLeft: 0,
+  },
+  {
+    id: "3",
+    image: require("../assets/Home_Video_Listing/Container16.png"),
+    marginLeft: 0,
+  },
 ];
 const dataStreaming = [
-  { id: '1', image: require('../assets/Home_Video_Listing/Container11.png'), marginLeft: -10 },
-  { id: '2', image: require('../assets/Home_Video_Listing/Container32.png'), marginLeft: 0 },
-  { id: '3', image: require('../assets/Home_Video_Listing/Container34.png'), marginLeft: 0 },
+  {
+    id: "1",
+    image: require("../assets/Home_Video_Listing/Container11.png"),
+    marginLeft: -10,
+  },
+  {
+    id: "2",
+    image: require("../assets/Home_Video_Listing/Container32.png"),
+    marginLeft: 0,
+  },
+  {
+    id: "3",
+    image: require("../assets/Home_Video_Listing/Container34.png"),
+    marginLeft: 0,
+  },
 ];
 const dataAudio = [
-  { 
-    id: '1', 
-    containerImage: require('../assets/Home_Video_Listing/Image7.png'),
-    TitleImage: require('../assets/Home_Video_Listing/Perfectlady.png'),
-    creImage: require('../assets/Home_Video_Listing/Bookcase.png'),
+  {
+    id: "1",
+    containerImage: require("../assets/Home_Video_Listing/Image7.png"),
+    TitleImage: require("../assets/Home_Video_Listing/Perfectlady.png"),
+    creImage: require("../assets/Home_Video_Listing/Bookcase.png"),
   },
-  { 
-    id: '2', 
-    containerImage: require('../assets/Home_Video_Listing/Image8.png'),
-    TitleImage: require('../assets/Home_Video_Listing/Experience.png'),
-    creImage: require('../assets/Home_Video_Listing/Lifestyle.png'),
-
+  {
+    id: "2",
+    containerImage: require("../assets/Home_Video_Listing/Image8.png"),
+    TitleImage: require("../assets/Home_Video_Listing/Experience.png"),
+    creImage: require("../assets/Home_Video_Listing/Lifestyle.png"),
   },
-  { 
-    id: '3', 
-    containerImage: require('../assets/Home_Video_Listing/Image9.png'),
-    TitleImage: require('../assets/Home_Video_Listing/Yourself.png'),
-    creImage: require('../assets/Home_Video_Listing/Bookcase.png'),
-
+  {
+    id: "3",
+    containerImage: require("../assets/Home_Video_Listing/Image9.png"),
+    TitleImage: require("../assets/Home_Video_Listing/Yourself.png"),
+    creImage: require("../assets/Home_Video_Listing/Bookcase.png"),
   },
-  { 
-    id: '4', 
-    containerImage: require('../assets/Home_Video_Listing/Image10.png'),
-    TitleImage: require('../assets/Home_Video_Listing/Experience.png'),
-    creImage: require('../assets/Home_Video_Listing/Lifestyle.png'),
-
+  {
+    id: "4",
+    containerImage: require("../assets/Home_Video_Listing/Image10.png"),
+    TitleImage: require("../assets/Home_Video_Listing/Experience.png"),
+    creImage: require("../assets/Home_Video_Listing/Lifestyle.png"),
   },
 ];
 
-
-
 export default function App({ navigation, route }) {
-    const user  = route.params.userData;
-    const [images, setImages] = useState([]);
+  const user = route.params.userData;
+  const [images, setImages] = useState([]);
 
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://192.168.1.3:3000/imageStreaming4');
-        console.log(response.data);
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          setImages(response.data); // Update state with fetched data
-        }
-      } catch (error) {
-        console.error('Error fetching image data:', error);
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(
+        "http://192.168.1.3:3000/imageStreaming4"
+      );
+      console.log(response.data);
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setImages(response.data); // Update state with fetched data
       }
-    };
-  
-    useEffect(() => {
-      fetchData();
-    }, []);
+    } catch (error) {
+      console.error("Error fetching image data:", error);
+    }
+  };
 
-    const dataStories = [
-      { id: '1', containerImage: {uri: user.avatar}, userImage: require('../assets/Home_Video_Listing/You.png') },
-      { id: '2', containerImage: require('../assets/Home_Video_Listing/Container17.png'), userImage: require('../assets/Home_Video_Listing/Adam.png') },
-      { id: '3', containerImage: require('../assets/Home_Video_Listing/Container20.png'), userImage: require('../assets/Home_Video_Listing/William.png') },
-      { id: '4', containerImage: require('../assets/Home_Video_Listing/Container23.png'), userImage: require('../assets/Home_Video_Listing/Peter.png') },
-      { id: '5', containerImage: require('../assets/Home_Video_Listing/Container26.png'), userImage: require('../assets/Home_Video_Listing/Julia.png') },
-      { id: '6', containerImage: require('../assets/Home_Video_Listing/Container29.png'), userImage: require('../assets/Home_Video_Listing/Rose.png') },
-    ];
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const dataStories = [
+    {
+      id: "1",
+      containerImage: { uri: user.avatar },
+      userImage: require("../assets/Home_Video_Listing/You.png"),
+    },
+    {
+      id: "2",
+      containerImage: require("../assets/Home_Video_Listing/Container17.png"),
+      userImage: require("../assets/Home_Video_Listing/Adam.png"),
+    },
+    {
+      id: "3",
+      containerImage: require("../assets/Home_Video_Listing/Container20.png"),
+      userImage: require("../assets/Home_Video_Listing/William.png"),
+    },
+    {
+      id: "4",
+      containerImage: require("../assets/Home_Video_Listing/Container23.png"),
+      userImage: require("../assets/Home_Video_Listing/Peter.png"),
+    },
+    {
+      id: "5",
+      containerImage: require("../assets/Home_Video_Listing/Container26.png"),
+      userImage: require("../assets/Home_Video_Listing/Julia.png"),
+    },
+    {
+      id: "6",
+      containerImage: require("../assets/Home_Video_Listing/Container29.png"),
+      userImage: require("../assets/Home_Video_Listing/Rose.png"),
+    },
+  ];
   // Hàm renderItem cho phần Stories
   const renderItem1 = ({ item }) => (
     <TouchableOpacity style={styles.padTouch}>
-      <Image style={{height: 50, width: 50, borderRadius: 50}} source={item.containerImage} />
+      <Image
+        style={{ height: 50, width: 50, borderRadius: 50 }}
+        source={item.containerImage}
+      />
       <Image source={item.userImage} />
     </TouchableOpacity>
   );
 
   // Hàm renderItem
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={[styles.padTouch, { marginLeft: item.marginLeft }]} onPress={()=>navigation.navigate('VideoStreaming', {userData: user})}>
+    <TouchableOpacity
+      style={[styles.padTouch, { marginLeft: item.marginLeft }]}
+      onPress={() => navigation.navigate("VideoStreaming", { userData: user })}
+    >
       <Image source={item.image} />
     </TouchableOpacity>
   );
 
-    // Hàm renderItem cho phần audio
-    const renderItem2 = ({ item }) => (
-      <TouchableOpacity style={{paddingHorizontal: 10}}>
-        <Image source={item.containerImage} />
-        <Image source={item.TitleImage} />
-        <Image source={item.creImage} />
-      </TouchableOpacity>
-    );
+  // Hàm renderItem cho phần audio
+  const renderItem2 = ({ item }) => (
+    <TouchableOpacity style={{ paddingHorizontal: 10 }}>
+      <Image source={item.containerImage} />
+      <Image source={item.TitleImage} />
+      <Image source={item.creImage} />
+    </TouchableOpacity>
+  );
 
-      // Hàm renderAnh
+  // Hàm renderAnh
   const renderAnh = ({ item }) => (
-    <TouchableOpacity style={{padding: 10}} onPress={()=> {navigation.navigate('New Feed', {userData: user})}}>
-       <Image style={{height: 120, width: 100, borderRadius: 10, resizeMode: 'contain'}} source={{uri : item.url}}/>
-       <Text style={{marginTop: 10, alignSelf: 'center'}}>{item.content}</Text>
+    <TouchableOpacity
+      style={{ padding: 10 }}
+      onPress={() => {
+        navigation.navigate("New Feed", { userData: user });
+      }}
+    >
+      <Image
+        style={{
+          height: 120,
+          width: 100,
+          borderRadius: 10,
+          resizeMode: "contain",
+        }}
+        source={{ uri: item.url }}
+      />
+      <Text style={{ marginTop: 10, alignSelf: "center" }}>{item.content}</Text>
     </TouchableOpacity>
   );
   return (
-    <ScrollView style={styles.container} vertical={true} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      vertical={true}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Story Section */}
+      <SafeAreaView style={styles.listStory}>
+        <FlatList
+          data={dataStories}
+          renderItem={renderItem1}
+          keyExtractor={(item) => item.id}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+        />
+      </SafeAreaView>
 
-    {/* Story Section */}
-    <SafeAreaView style={styles.listStory}>
-      <FlatList
-        data={dataStories}
-        renderItem={renderItem1}
-        keyExtractor={item => item.id}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-      />
-    </SafeAreaView>
+      {/* Top Trending Section */}
+      <SafeAreaView style={{ marginTop: 15, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Top trending</Text>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("VideoStreaming", { userData: user })
+            }
+          >
+            <Image
+              source={require("../assets/Home_Video_Listing/Button1.png")}
+            />
+          </TouchableOpacity>
+        </View>
 
-    {/* Top Trending Section */}
-    <SafeAreaView style={{ marginTop: 15,marginBottom: 20 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Top trending</Text>
-        <TouchableOpacity onPress={()=>navigation.navigate('VideoStreaming', {userData: user})}>
-          <Image source={require('../assets/Home_Video_Listing/Button1.png')}/>
-        </TouchableOpacity>
+        <FlatList
+          data={dataTopTrending}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ marginTop: 10 }}
+        />
+      </SafeAreaView>
+
+      {/* Browse Section */}
+      <View style={{ marginTop: 25, marginBottom: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: "bold" }}>Browse topic</Text>
+        <View style={[styles.viewTopic, { marginTop: 10 }]}>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container4.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container5.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container6.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container7.png")}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.viewTopic, { marginTop: 10 }]}>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container8.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container9.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container10.png")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Container36.png")}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <FlatList
-        data={dataTopTrending}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ marginTop: 10 }}
-      />
-    </SafeAreaView>
+      {/* Streaming Section */}
+      <SafeAreaView style={{ marginTop: 20, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Images</Text>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("New Feed", { userData: user });
+            }}
+          >
+            <Image
+              source={require("../assets/Home_Video_Listing/Button1.png")}
+            />
+          </TouchableOpacity>
+        </View>
 
-    {/* Browse Section */}
-    <View style={{ marginTop: 25, marginBottom: 20}}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Browse topic</Text>
-      <View style={[styles.viewTopic, {marginTop: 10}]}>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container4.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container5.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container6.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container7.png')} />
-        </TouchableOpacity>
-      </View>
-      <View style={[styles.viewTopic, {marginTop: 10}]}>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container8.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container9.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container10.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Container36.png')} />
-        </TouchableOpacity>
-      </View>
-    </View>
+        <FlatList
+          data={images}
+          renderItem={renderAnh}
+          keyExtractor={(item, index) =>
+            item.id?.toString() || index.toString()
+          } // Đảm bảo giá trị key là chuỗi duy nhất
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ marginTop: 10 }}
+        />
+      </SafeAreaView>
 
-    {/* Streaming Section */}
-    <SafeAreaView style={{ marginTop: 20, marginBottom: 20}}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Images</Text>
-        <TouchableOpacity onPress={()=> {navigation.navigate('New Feed', {userData: user})}}>
-          <Image source={require('../assets/Home_Video_Listing/Button1.png')} />
-        </TouchableOpacity>
-      </View>
+      {/* Audio Section */}
+      <SafeAreaView style={{ marginTop: 20, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold" }}>Audio</Text>
+          <TouchableOpacity>
+            <Image
+              source={require("../assets/Home_Video_Listing/Button1.png")}
+            />
+          </TouchableOpacity>
+        </View>
 
-      <FlatList
-        data={images}
-        renderItem={renderAnh}
-        keyExtractor={item => item.id}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ marginTop: 10 }}
-      />
-    </SafeAreaView>
-
-    {/* Audio Section */}
-    <SafeAreaView style={{ marginTop: 20, marginBottom: 20 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Audio</Text>
-        <TouchableOpacity>
-          <Image source={require('../assets/Home_Video_Listing/Button1.png')} />
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={dataAudio}
-        renderItem={renderItem2}
-        keyExtractor={item => item.id}
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ marginTop: 10 }}
-      />
-    </SafeAreaView>
-  </ScrollView>
+        <FlatList
+          data={dataAudio}
+          renderItem={renderItem2}
+          keyExtractor={(item) => item.id}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ marginTop: 10 }}
+        />
+      </SafeAreaView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 10,
     paddingHorizontal: 15,
   },
   listStory: {
     paddingVertical: 15,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   padTouch: {
     paddingHorizontal: 10,
-    alignItems: 'center',
-  }, 
-  viewTopic : {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
+    alignItems: "center",
   },
-  nav : {
-    marginTop: 20, 
+  viewTopic: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  nav: {
+    marginTop: 20,
     marginBottom: 12,
     paddingVertical: 15,
     paddingHorizontal: 5,
-    borderTopColor: 'grey',
-    borderTopWidth: .5,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    borderTopColor: "grey",
+    borderTopWidth: 0.5,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 });

@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { View, StyleSheet, Image, Dimensions, ScrollView , Alert} from "react-native";
 import { TextInput, Text } from "react-native";
-import { Video } from 'expo-av';
+import { VideoView } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import axios from 'axios';
+
 
 const Post_Video_Screen = ({ navigation, route }) => {
   const { media, mediaType, user } = route.params;
@@ -50,7 +51,7 @@ const Post_Video_Screen = ({ navigation, route }) => {
         )}
 
         {mediaType === 'video' && (
-          <Video
+          <VideoView
             source={{ uri: media }}
             style={{flex: 1, width: 300, height: 300}}
             resizeMode="contain"
