@@ -12,32 +12,15 @@ import axios from "axios";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 import { useNavigation } from "@react-navigation/native";
 
-const MyVideos = ({ id }) => {
-  const [videos, setVideos] = useState([]);
-  const navigation = useNavigation();
-  
-  const fetchData = async (id) => {
-    try {
-      const response = await axios.get(
-        `http://192.168.1.3:3000/profilevideos?id=${id}`
-      );
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setVideos(response.data);
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu:", error);
-    }
-  };
+const BASE_URL = "http://192.168.1.6:3000"; // Dễ dàng chỉnh sửa khi cần
 
-  useEffect(() => {
-    if (id) {
-      fetchData(id);
-    }
-  }, [id]);
+const MyVideos = ({ id, videos }) => {
+  // Nhận videos từ props
+  const navigation = useNavigation();
 
   return (
     <FlatList
-      data={videos}
+      data={videos} // Dùng videos từ props
       showsVerticalScrollIndicator={false}
       renderItem={({ item }) => (
         <TouchableOpacity
@@ -49,7 +32,6 @@ const MyVideos = ({ id }) => {
               avatar: item.avatar,
             })
           }
-          key={item.id} // Truyền `key` trực tiếp vào đây
         >
           <Image
             style={{ height: "100%", width: "100%", borderRadius: 10 }}
@@ -70,18 +52,23 @@ const MyVideos = ({ id }) => {
   );
 };
 
-
-
 const MyImages = ({ id }) => {
   const [images, setImages] = useState([]);
   const navigation = useNavigation();
+
   const fetchData = async (id) => {
+    if (!id) {
+      console.log("ID không hợp lệ");
+      return;
+    }
+
     try {
-      const response = await axios.get(
-        `http://192.168.1.3:3000/profileimages?id=${id}`
-      );
+      const response = await axios.get(`${BASE_URL}/profileimages?id=${id}`);
       if (Array.isArray(response.data) && response.data.length > 0) {
         setImages(response.data);
+      } else {
+        console.log("Không có ảnh nào được tìm thấy.");
+        setImages([]); // Xử lý trường hợp không có dữ liệu
       }
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu:", error);
@@ -141,20 +128,21 @@ const MyLiked = () => {
 };
 
 const dataVideos = [
-  { id: "1", image: require("../assets/MyProfile/Container72.png") },
+  { id: "1", image: require("../assets/MyProfile/Container80.png") },
   { id: "2", image: require("../assets/MyProfile/Container73.png") },
   { id: "3", image: require("../assets/MyProfile/Container74.png") },
   { id: "4", image: require("../assets/MyProfile/Container75.png") },
   { id: "5", image: require("../assets/MyProfile/Container76.png") },
-  { id: "6", image: require("../assets/MyProfile/Container77.png") },
-  { id: "7", image: require("../assets/MyProfile/Container78.png") },
-  { id: "8", image: require("../assets/MyProfile/Container79.png") },
-  { id: "9", image: require("../assets/MyProfile/Container80.png") },
+  { id: "6", image: require("../assets/MyProfile/Container79.png") },
+  { id: "7", image: require("../assets/MyProfile/Container77.png") },
+  { id: "8", image: require("../assets/MyProfile/Container78.png") },
+  { id: "9", image: require("../assets/MyProfile/Container72.png") },
 ];
 
 const widthScreen = Dimensions.get("window").width;
 
-const MyVideosTabView = ({ id }) => {
+const MyVideosTabView = ({ id, videos }) => {
+  // Nhận videos từ props
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: "videos", title: "My Videos" },
@@ -163,7 +151,7 @@ const MyVideosTabView = ({ id }) => {
   ]);
 
   const renderScene = SceneMap({
-    videos: () => <MyVideos id={id} />,
+    videos: () => <MyVideos id={id} videos={videos} />, // Truyền videos vào đây
     images: () => <MyImages id={id} />,
     liked: MyLiked,
   });
@@ -199,43 +187,44 @@ const MyVideosTabView = ({ id }) => {
 
 export default function App({ navigation, route }) {
   const user = route.params.userData;
-  const [data, setData] = useState({});
+  const [videos, setVideos] = useState([]); // Giữ videos trong state
+
   const fetchData = async (id) => {
     try {
-      const response = await axios.get(
-        `http://192.168.1.5:3000/follow?id=${id}`
-      );
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        const followData = response.data[0];
-        setData(followData);
+      if (!id) return;
+      const response = await axios.get(`${BASE_URL}/profilevideos?id=${id}`);
+      if (Array.isArray(response.data)) {
+        setVideos(response.data);
+      } else {
+        setVideos([]);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Lỗi khi lấy dữ liệu:", error);
     }
   };
 
   useEffect(() => {
-    if (user && user.idUser) {
+    if (user?.idUser) {
       fetchData(user.idUser);
     }
-  }, [user]);
+  }, [user?.idUser]);
 
   return (
     <View style={styles.container}>
       <View style={styles.imgLogo}>
         <Image
           style={{ height: 150, width: 150, borderRadius: 150 }}
-          source={{ uri: user.avatar }}
+          source={{ uri: user?.avatar || "https://via.placeholder.com/150" }}
         />
         <Text style={{ fontSize: 24, fontWeight: "bold" }}>
-          {user.username}
+          {user?.username || "Unknown User"}
         </Text>
         <View style={{ flexDirection: "row", marginTop: 20 }}>
           <TouchableOpacity
             style={styles.fl}
             onPress={() => navigation.navigate("Following", { user: user })}
           >
-            <Text>{data.following_count || 0}</Text>
+            <Text>{user?.following_count || 0}</Text>
             <Text style={styles.textgrey}>Following</Text>
           </TouchableOpacity>
 
@@ -243,7 +232,7 @@ export default function App({ navigation, route }) {
             style={styles.fl}
             onPress={() => navigation.navigate("Following", { user: user })}
           >
-            <Text>{data.followers_count || 0}</Text>
+            <Text>{user?.followers_count || 0}</Text>
             <Text style={styles.textgrey}>Followers</Text>
           </TouchableOpacity>
 
@@ -253,7 +242,8 @@ export default function App({ navigation, route }) {
           </TouchableOpacity>
         </View>
       </View>
-      <MyVideosTabView id={user.idUser} />
+      <MyVideosTabView id={user} videos={videos} />{" "}
+      {/* Truyền videos vào đây */}
     </View>
   );
 }

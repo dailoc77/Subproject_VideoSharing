@@ -43,7 +43,7 @@ const EditProfile = ({ navigation, route }) => {
 
   const updatePost = async (idUser, username, avatar, sdt, email, birthDay) => {
     try {
-      const response = await axios.put('http://192.168.1.3:3000/updateProfile', {
+      const response = await axios.put('http://192.168.1.6:3000/updateProfile', {
         idUser,
         username,
         avatar,

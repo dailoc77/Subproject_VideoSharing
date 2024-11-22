@@ -81,7 +81,7 @@ export default function App({ navigation, route }) {
   const fetchData = async () => {
     try {
       const response = await axios.get(
-        "http://192.168.1.3:3000/imageStreaming4"
+        "http://192.168.1.6:3000/imageStreaming4"
       );
       console.log(response.data);
       if (Array.isArray(response.data) && response.data.length > 0) {

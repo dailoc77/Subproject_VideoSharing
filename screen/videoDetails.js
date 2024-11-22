@@ -1,9 +1,22 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, useWindowDimensions, Dimensions, Modal, TextInput, Button, Alert, Image } from 'react-native';
-import { Video } from 'expo-av';
-import Icon from 'react-native-vector-icons/EvilIcons';
-import Icon2 from 'react-native-vector-icons/FontAwesome';
-import axios from 'axios';
+import React, { useRef, useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  useWindowDimensions,
+  Dimensions,
+  Modal,
+  TextInput,
+  Button,
+  Alert,
+  Image,
+} from "react-native";
+import { Video } from "expo-av";
+import Icon from "react-native-vector-icons/EvilIcons";
+import Icon2 from "react-native-vector-icons/FontAwesome";
+import axios from "axios";
 
 export default function VideoStreaming({ navigation, route }) {
   const videoRefs = useRef([]);
@@ -19,19 +32,31 @@ export default function VideoStreaming({ navigation, route }) {
   const [count, setCount] = useState("");
   const [likecount, setlikeCount] = useState("");
   const [isCommentsVisible, setCommentsVisible] = useState(false);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   // const widthScreen = Dimensions.get('window').width;
   const fetchData = async () => {
     try {
-      const response = await axios.get(`http://192.168.1.3:3000/videoDetails?id=${id}`);
-      if (Array.isArray(response.data) && response.data.length > 0) {
+      if (!id) {
+        console.error("ID is required to fetch video data.");
+        return;
+      }
+      const response = await axios.get(
+        `http://192.168.1.6:3000/videoDetails?id=${id}`
+      );
+      if (
+        response.status === 200 &&
+        Array.isArray(response.data) &&
+        response.data.length > 0
+      ) {
         setVideos(response.data);
-        setActivePostId(response.data[0].id);
+        setActivePostId(response.data[0].idPost); // Đổi `id` thành `idPost` nếu cần khớp với cơ sở dữ liệu
         fetchCommentCount();
         fetchLikeCount();
+      } else {
+        console.warn("No video details found for the given ID.");
       }
     } catch (error) {
-      console.error("Error fetching video data:", error);
+      console.error("Error fetching video data:", error.message || error);
     }
   };
 
@@ -44,7 +69,7 @@ export default function VideoStreaming({ navigation, route }) {
   const handlePlayPause = (index) => {
     const video = videoRefs.current[index];
     if (video) {
-      video.getStatusAsync().then(status => {
+      video.getStatusAsync().then((status) => {
         if (status.isPlaying) {
           video.pauseAsync();
         } else {
@@ -55,13 +80,14 @@ export default function VideoStreaming({ navigation, route }) {
   };
 
   const toggleLike = (idPost) => {
-    setLikedPosts(prev => ({ ...prev, [idPost]: !prev[idPost] }));
+    setLikedPosts((prev) => ({ ...prev, [idPost]: !prev[idPost] }));
   };
 
   const fetchComments = async () => {
-
     try {
-      const response = await axios.get(`http://192.168.1.5:3000/comment?id=${id}`);
+      const response = await axios.get(
+        `http://192.168.1.6:3000/comment?id=${id}`
+      );
       if (response.status === 200) {
         setComments(response.data);
         setCommentsVisible(true);
@@ -75,9 +101,10 @@ export default function VideoStreaming({ navigation, route }) {
   };
 
   const fetchCommentCount = async () => {
-
     try {
-      const response = await axios.get(`http://192.168.1.5:3000/commentCount?id=${id}`);
+      const response = await axios.get(
+        `http://192.168.1.6:3000/commentCount?id=${id}`
+      );
       if (response.status === 200) {
         setCount(response.data);
       } else {
@@ -89,11 +116,11 @@ export default function VideoStreaming({ navigation, route }) {
     }
   };
 
-
   const fetchLikeCount = async () => {
-
     try {
-      const response = await axios.get(`http://192.168.1.5:3000/LikeCount?id=${id}`);
+      const response = await axios.get(
+        `http://192.168.1.6:3000/likeCount?id=${id}`
+      );
       if (response.status === 200) {
         setlikeCount(response.data);
       } else {
@@ -112,46 +139,63 @@ export default function VideoStreaming({ navigation, route }) {
   // };
 
   const renderVideo = ({ item, index }) => (
-    <View style={[styles.videoContainer, { height }]}>
+    <View style={[styles.videoContainer, { height }]} key={item.idPost}>
       <TouchableOpacity onPress={() => handlePlayPause(index)}>
-        <Video
-          ref={(ref) => (videoRefs.current[index] = ref)}
-          source={{ uri: item.url }}
-          style={styles.video}
-          resizeMode="contain"
-          shouldPlay={item.idPost === activePosId}
-          isLooping
-        />
-      </TouchableOpacity>
+      <Video
+        ref={(ref) => (videoRefs.current[index] = ref)}
+        source={{ uri: item.url }}
+        style={styles.video}
+        resizeMode="contain"
+        shouldPlay={item.idPost === activePosId}
+        isLooping
+      />
+    </TouchableOpacity>
       <View style={styles.boxIcon}>
-
         <TouchableOpacity>
-          <Image style={[{ height: 50, width: 50, borderRadius: 50, marginBottom: 10 }]} source={{ uri: avatar.avatar }} />
+          <Image
+            style={[
+              { height: 50, width: 50, borderRadius: 50, marginBottom: 10 },
+            ]}
+            source={{ uri: avatar.avatar }}
+          />
         </TouchableOpacity>
-
         <TouchableOpacity onPress={() => toggleLike(item.idPost)}>
           <Icon2
             style={styles.iconRight}
             name="heart-o"
             size={30}
-            color={likedPosts[item.idPost] ? 'red' : 'white'}
+            color={likedPosts[item.idPost] ? "red" : "white"}
           />
-          <Text style={styles.count}>{likecount[0]?.like_count ? likecount[0]?.like_count : 0}</Text>
+          <Text style={styles.count}>{likecount[0]?.like_count || 0}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => fetchComments(item.idPost)}>
-          <Icon2 style={styles.iconRight} name="comment-o" size={30} color="white" />
-          <Text style={styles.count}>{count[0]?.comment_count ? count[0]?.comment_count : 0}</Text>
+          <Icon2
+            style={styles.iconRight}
+            name="comment-o"
+            size={30}
+            color="white"
+          />
+          <Text style={styles.count}>{count[0]?.comment_count || 0}</Text>
         </TouchableOpacity>
-
-        <Icon2 style={styles.iconRight} name="bookmark-o" size={30} color="white" />
+        <Icon2
+          style={styles.iconRight}
+          name="bookmark-o"
+          size={30}
+          color="white"
+        />
       </View>
       <View style={styles.boxTitle}>
-        <Text style={{ color: 'white', fontSize: 18 }}>{item.content}</Text>
+        <Text style={{ color: "white", fontSize: 18 }}>{item.content}</Text>
       </View>
       <View style={styles.music}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Icon2 style={{ paddingRight: 30 }} name="music" size={30} color="white" />
-          <Text style={{ color: 'white', fontSize: 16 }}>Music on Video</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Icon2
+            style={{ paddingRight: 30 }}
+            name="music"
+            size={30}
+            color="white"
+          />
+          <Text style={{ color: "white", fontSize: 16 }}>Music on Video</Text>
         </View>
         <Icon2 name="navicon" size={30} color="white" />
       </View>
@@ -160,13 +204,18 @@ export default function VideoStreaming({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name='chevron-left' size={40} color="white" />
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="chevron-left" size={40} color="white" />
       </TouchableOpacity>
       <FlatList
         data={videos}
         renderItem={renderVideo}
-        keyExtractor={item => item.idPost}
+        keyExtractor={(item, index) =>
+          item.idPost ? item.idPost.toString() : index.toString()
+        } // Dùng `index` nếu `idPost` không hợp lệ
         viewabilityConfig={{
           itemVisiblePercentThreshold: 50,
         }}
@@ -185,41 +234,68 @@ export default function VideoStreaming({ navigation, route }) {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Bình luận</Text>
             <TouchableOpacity>
-              <Icon style={styles.close} name='close' size={30} color='black' onPress={() => setCommentsVisible(false)} />
+              <Icon
+                style={styles.close}
+                name="close"
+                size={30}
+                color="black"
+                onPress={() => setCommentsVisible(false)}
+              />
             </TouchableOpacity>
             <FlatList
               data={comments}
-              keyExtractor={comment => comment.id}
+              keyExtractor={(comment, index) =>
+                comment.id ? comment.id.toString() : index.toString()
+              } // Dùng `index` nếu `id` không hợp lệ
               renderItem={({ item }) => (
-                <View style={{ flexDirection: 'row', padding: 5, alignItems: 'center', flex: 1, justifyContent: 'space-between' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={{ uri: item.avatar }} style={{ height: 50, width: 50, borderRadius: 50 }} />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    padding: 5,
+                    alignItems: "center",
+                    flex: 1,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Image
+                      source={{ uri: item.avatar }}
+                      style={{ height: 50, width: 50, borderRadius: 50 }}
+                    />
                     <View style={{ paddingLeft: 10 }}>
-                      <Text style={[styles.commentText, {fontWeight: 'bold'}]}>{item.username}</Text>
-                      <Text style={{ fontSize: 11, color: 'gray', marginTop: -8, marginBottom: 5 }}>{item.time}</Text>
+                      <Text
+                        style={[styles.commentText, { fontWeight: "bold" }]}
+                      >
+                        {item.username}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: "gray",
+                          marginTop: -8,
+                          marginBottom: 5,
+                        }}
+                      >
+                        {item.time}
+                      </Text>
                       <Text style={styles.commentText}>{item.text}</Text>
                     </View>
                   </View>
-                  <Icon2
-                    name='heart-o'
-                    size={20}
-                    color='gray'
-                  />
+                  <Icon2 name="heart-o" size={20} color="gray" />
                 </View>
               )}
             />
 
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TextInput
                 style={styles.input}
-                placeholder='Thêm bình luận...'
+                placeholder="Thêm bình luận..."
                 placeholderTextColor="#888"
                 value={newComment}
                 onChangeText={setNewComment}
               />
-              <Icon2 name='paper-plane' size={20} color="pink" />
+              <Icon2 name="paper-plane" size={20} color="pink" />
             </View>
-
           </View>
         </View>
       </Modal>
@@ -230,62 +306,62 @@ export default function VideoStreaming({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: "black",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 70,
     left: 20,
     zIndex: 11,
   },
   videoContainer: {
-    width: '100%',
-    position: 'relative',
+    width: "100%",
+    position: "relative",
   },
   video: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   boxIcon: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 70,
     right: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   iconRight: {
     paddingVertical: 10,
   },
   boxTitle: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 60,
     left: 20,
   },
   music: {
-    flexDirection: 'row',
-    width: '100%',
-    position: 'absolute',
+    flexDirection: "row",
+    width: "100%",
+    position: "absolute",
     bottom: 20,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 25,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    position: 'relative'
+    backgroundColor: "rgba(0,0,0,0.5)",
+    position: "relative",
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 20,
     borderRadius: 10,
-    width: '100%',
-    height: '60%',
-    position: 'absolute',
-    bottom: 0
+    width: "100%",
+    height: "60%",
+    position: "absolute",
+    bottom: 0,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   commentText: {
@@ -296,23 +372,22 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 8,
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
     borderRadius: 10,
     marginBottom: 10,
-    marginRight: 10
+    marginRight: 10,
   },
   close: {
-    position: 'absolute',
+    position: "absolute",
     right: 0,
-    top: -40
+    top: -40,
   },
   count: {
-    color: 'white'
-    , position: 'absolute'
-    , alignSelf: 'center',
-    backgroundColor: 'black',
+    color: "white",
+    position: "absolute",
+    alignSelf: "center",
+    backgroundColor: "black",
     bottom: 5,
-    fontSize: 18
-  }
-
+    fontSize: 18,
+  },
 });
